@@ -1,0 +1,14 @@
+---
+interface Props { name: string; legend: string; bday?: boolean; hint?: string }
+const { name, legend, bday = false, hint } = Astro.props;
+const ac = (p: string) => (bday ? `bday-${p}` : "off");
+---
+<fieldset data-datefields={name} class="min-w-0">
+  <legend class="field-label">{legend}</legend>
+  <div class="flex gap-2">
+    <input data-part="d" class="input w-16 text-center" inputmode="numeric" placeholder="DD" aria-label={`${legend}: day`} autocomplete={ac("day")} maxlength="2" />
+    <input data-part="m" class="input w-16 text-center" inputmode="numeric" placeholder="MM" aria-label={`${legend}: month`} autocomplete={ac("month")} maxlength="2" />
+    <input data-part="y" class="input w-24 text-center" inputmode="numeric" placeholder="YYYY" aria-label={`${legend}: year`} autocomplete={ac("year")} maxlength="4" />
+  </div>
+  {hint && <p class="mt-1.5 text-xs text-mute">{hint}</p>}
+</fieldset>

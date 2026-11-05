@@ -1,0 +1,49 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+const faq = [{ q: "How much should I tip?", a: "Customary tips vary by country. In the US 15 to 20% is common in restaurants; in many other countries service is included and tipping is optional." }];
+---
+<CalcPage slug="tip-calculator" title="Tip Calculator: Tip and Split the Bill" description="Free tip calculator. Pick a tip percentage, split the bill between any number of people and see each person's share and the total instantly. No sign-up." heading="Tip Calculator" intro="Pick a tip, split the bill, done." faq={faq}>
+  <section data-calc class="card-lg grid gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+    <form class="space-y-5" onsubmit="return false" novalidate>
+      <div><label for="bill" class="field-label">Bill amount</label><input id="bill" class="input" inputmode="decimal" autocomplete="off" /></div>
+      <div>
+        <p class="field-label" id="tl">Tip</p>
+        <div class="flex flex-wrap gap-2" role="radiogroup" aria-labelledby="tl">
+          {[10, 15, 18, 20, 25].map((t) => <button type="button" role="radio" aria-checked={t === 18 ? "true" : "false"} data-tip={t} class="pill-tab">{t}%</button>)}
+        </div>
+      </div>
+      <div class="w-32"><label for="ppl" class="field-label">People</label><input id="ppl" class="input" inputmode="numeric" value="1" autocomplete="off" /></div>
+    </form>
+    <div aria-live="polite">
+      <p class="eyebrow">Each person pays</p>
+      <p data-out="each" class="mt-2 text-3xl font-semibold text-ink sm:text-[40px]" style="letter-spacing:-0.05em;line-height:1.05">—</p>
+      <dl class="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-hairline bg-hairline">
+        <div class="bg-elevated p-4"><dt class="eyebrow">Tip total</dt><dd class="stat-num mt-1 text-xl" data-out="tip">—</dd></div>
+        <div class="bg-elevated p-4"><dt class="eyebrow">Bill + tip</dt><dd class="stat-num mt-1 text-xl" data-out="tot">—</dd></div>
+      </dl>
+    </div>
+  </section>
+</CalcPage>
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-calc]")!;
+  const out = (k: string) => root.querySelector<HTMLElement>(`[data-out=${k}]`)!;
+  const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+  let tip = 18;
+  const bill = root.querySelector<HTMLInputElement>("#bill")!, ppl = root.querySelector<HTMLInputElement>("#ppl")!;
+  root.querySelectorAll<HTMLButtonElement>("[data-tip]").forEach((b) => b.addEventListener("click", () => {
+    tip = +b.dataset.tip!;
+    root.querySelectorAll<HTMLButtonElement>("[data-tip]").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+    update();
+  }));
+  function update() {
+    const B = parseFloat(bill.value.replace(/,/g, "")), n = Math.floor(+ppl.value);
+    if (!(B >= 0) || !(n >= 1)) { for (const k of ["each", "tip", "tot"]) out(k).textContent = "—"; return; }
+    const t = B * tip / 100;
+    out("each").textContent = money((B + t) / n);
+    out("tip").textContent = money(t);
+    out("tot").textContent = money(B + t);
+  }
+  [bill, ppl].forEach((i) => i.addEventListener("input", update));
+  update();
+</script>

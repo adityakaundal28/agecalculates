@@ -1,0 +1,166 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+const faq = [
+  { q: "Does the calendar update on its own?", a: "Yes. Today's date is highlighted using your device clock and moves automatically when the day changes." },
+  { q: "Which day does the week start on?", a: "We use the default for your browser's region, which is Sunday in the US and Monday in much of Europe." },
+  { q: "Can I jump to a specific date?", a: "Yes. Use the date picker, or choose a month and year from the drop-downs, to go straight there." },
+  { q: "Does it show past and future years?", a: "Yes. Browse any month from year 1 to year 9999 using the arrows or the year selector." },
+];
+---
+<CalcPage slug="calendar" title="Live Monthly Calendar" description="Free online calendar with today highlighted. Browse any month or year, jump to a specific date and see weekdays at a glance. Clean and works on every device." heading="Calendar" intro="A simple live monthly calendar. Today is always highlighted." faq={faq}>
+  <section data-cal aria-label="Calendar">
+    <div class="mb-4 flex flex-wrap items-center gap-2">
+      <button type="button" data-today class="btn-ghost">Today</button>
+      <button type="button" data-nav="-1" class="btn-ghost w-9 px-0" aria-label="Previous month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
+      <button type="button" data-nav="1" class="btn-ghost w-9 px-0" aria-label="Next month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+      <h2 data-title class="ml-1 mr-auto text-xl font-semibold text-ink sm:text-2xl" style="letter-spacing:-0.02em" aria-live="polite"></h2>
+      <div class="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+        <label class="sr-only" for="cal-month">Month</label>
+        <select id="cal-month" data-month class="input h-9 w-auto min-w-36 flex-1 sm:flex-none"></select>
+        <label class="sr-only" for="cal-year">Year</label>
+        <select id="cal-year" data-year class="input h-9 w-28 flex-none"></select>
+        <label class="sr-only" for="cal-date">Go to date</label>
+        <input id="cal-date" data-date type="date" min="0001-01-01" max="9999-12-31" class="input h-9 w-full sm:w-auto" />
+      </div>
+    </div>
+    <div class="overflow-hidden rounded-md border border-hairline bg-elevated">
+      <table class="w-full table-fixed border-collapse" data-table>
+        <thead data-head></thead>
+        <tbody data-body></tbody>
+      </table>
+    </div>
+  </section>
+  <Fragment slot="content">
+    <section>
+      <h2 class="h-section">How to use the online calendar</h2>
+      <ol class="mt-4 list-decimal space-y-2 pl-5 leading-6">
+        <li>The current month opens with today highlighted.</li>
+        <li>Use the previous and next arrows to move one month at a time.</li>
+        <li>Pick a month and year from the drop-downs, or type a date in the picker to jump straight to it.</li>
+        <li>Press Today to return to the current month at any time.</li>
+      </ol>
+      <h3 class="h-card mt-6">Example</h3>
+      <p class="mt-2 leading-6">Want to know which weekday 25 December 2030 falls on? Choose December and 2030, then look at the 25th: it is a Wednesday. Use the calendar to plan holidays, check deadlines, find the weekday of a birthday or see how many weeks sit between two dates, with no sign-up and nothing to install.</p>
+    </section>
+  </Fragment>
+</CalcPage>
+
+<style is:global>
+  [data-cal] th { border-bottom: 1px solid var(--c-hairline); padding: 0.5rem 0; text-align: center; font-size: 0.75rem; font-weight: 500; color: var(--c-mute); text-transform: uppercase; letter-spacing: 0.05em; }
+  [data-cal] td { height: 3.5rem; vertical-align: top; border-right: 1px solid var(--c-hairline); border-bottom: 1px solid var(--c-hairline); padding: 0.25rem; }
+  [data-cal] td:last-child { border-right: 0; }
+  [data-cal] tr:last-child td { border-bottom: 0; }
+  @media (min-width: 640px) { [data-cal] td { height: 6.5rem; padding: 0.375rem 0.5rem; } }
+  @media (min-width: 1024px) { [data-cal] td { height: 7.5rem; } }
+</style>
+
+<script>
+  import { today, daysInMonth, formatLong, weekday, MONTHS, WEEKDAYS, cmp, type YMD } from "../lib/date";
+  const root = document.querySelector<HTMLElement>("[data-cal]")!;
+  const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const head = $("[data-head]"), body = $("[data-body]"), title = $("[data-title]");
+
+  // Week start from the browser's region (Intl weekInfo: 7 = Sunday), Sunday fallback.
+  let ws = 0;
+  try {
+    const loc: any = new Intl.Locale(navigator.language);
+    const info = loc.getWeekInfo ? loc.getWeekInfo() : loc.weekInfo;
+    if (info && info.firstDay) ws = info.firstDay % 7;
+  } catch {}
+
+  let t0 = today();
+  let view = { y: t0.y, m: t0.m };
+  let picked: YMD | null = null;
+
+  const monthSel = $<HTMLSelectElement>("[data-month]"), yearSel = $<HTMLSelectElement>("[data-year]"), dateIn = $<HTMLInputElement>("[data-date]");
+  MONTHS.forEach((n, i) => monthSel.add(new Option(n, String(i + 1))));
+  const fillYears = (y: number) => {
+    const lo = Math.min(1900, y), hi = Math.max(2100, y);
+    if (yearSel.options.length === hi - lo + 1 && +yearSel.options[0].value === lo) return;
+    yearSel.replaceChildren(...Array.from({ length: hi - lo + 1 }, (_, i) => new Option(String(lo + i), String(lo + i))));
+  };
+
+  function renderHead() {
+    const tr = document.createElement("tr");
+    for (let i = 0; i < 7; i++) {
+      const th = document.createElement("th");
+      th.scope = "col";
+      const full = WEEKDAYS[(i + ws) % 7];
+      th.innerHTML = `<span aria-hidden="true">${full.slice(0, 3)}</span><span class="sr-only">${full}</span>`;
+      tr.append(th);
+    }
+    head.replaceChildren(tr);
+  }
+
+  function cell(date: YMD, inMonth: boolean) {
+    const td = document.createElement("td");
+    td.setAttribute("aria-label", `${weekday(date)}, ${formatLong(date)}`);
+    const isToday = cmp(date, t0) === 0;
+    if (isToday) td.setAttribute("aria-current", "date");
+    if (!inMonth) td.style.background = "var(--c-hairline-soft)";
+    if (picked && cmp(date, picked) === 0) td.style.boxShadow = "inset 0 0 0 2px var(--c-link)";
+    const n = document.createElement("span");
+    n.className = "inline-flex h-7 min-w-7 items-center justify-center whitespace-nowrap rounded-full px-1 text-xs tabular-nums sm:text-sm " +
+      (isToday ? "bg-link font-semibold text-canvas" : inMonth ? "text-ink" : "text-mute");
+    n.textContent = date.d === 1 ? `${MONTHS[date.m - 1].slice(0, 3)} ${date.d}` : String(date.d);
+    td.append(n);
+    return td;
+  }
+
+  function render() {
+    const { y, m } = view;
+    title.textContent = `${MONTHS[m - 1]} ${y}`;
+    fillYears(y);
+    monthSel.value = String(m);
+    yearSel.value = String(y);
+    const first = new Date(Date.UTC(2000, m - 1, 1)); first.setUTCFullYear(y);
+    const lead = (first.getUTCDay() - ws + 7) % 7;
+    const dim = daysInMonth(y, m);
+    const rows = Math.ceil((lead + dim) / 7);
+    const prev = m === 1 ? { y: y - 1, m: 12 } : { y, m: m - 1 };
+    const next = m === 12 ? { y: y + 1, m: 1 } : { y, m: m + 1 };
+    const prevDim = daysInMonth(prev.y, prev.m);
+    const trs: HTMLElement[] = [];
+    for (let r = 0; r < rows; r++) {
+      const tr = document.createElement("tr");
+      for (let c = 0; c < 7; c++) {
+        const i = r * 7 + c - lead + 1; // day number relative to this month
+        if (i < 1) tr.append(cell({ ...prev, d: prevDim + i }, false));
+        else if (i > dim) tr.append(cell({ ...next, d: i - dim }, false));
+        else tr.append(cell({ y, m, d: i }, true));
+      }
+      trs.push(tr);
+    }
+    body.replaceChildren(...trs);
+  }
+
+  function go(delta: number) {
+    const idx = view.y * 12 + (view.m - 1) + delta;
+    const y = Math.floor(idx / 12);
+    if (y < 1 || y > 9999) return;
+    view = { y, m: (idx % 12) + 1 };
+    render();
+  }
+
+  root.querySelectorAll<HTMLButtonElement>("[data-nav]").forEach((b) => b.addEventListener("click", () => go(+b.dataset.nav!)));
+  $("[data-today]").addEventListener("click", () => { t0 = today(); picked = null; dateIn.value = ""; view = { y: t0.y, m: t0.m }; render(); });
+  monthSel.addEventListener("change", () => { view.m = +monthSel.value; render(); });
+  yearSel.addEventListener("change", () => { view.y = +yearSel.value; render(); });
+  dateIn.addEventListener("change", () => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateIn.value);
+    picked = m ? { y: +m[1], m: +m[2], d: +m[3] } : null;
+    if (picked) view = { y: picked.y, m: picked.m };
+    render();
+  });
+  document.addEventListener("keydown", (e) => {
+    const tag = (e.target as HTMLElement).tagName;
+    if (e.metaKey || e.ctrlKey || e.altKey || tag === "INPUT" || tag === "SELECT" || tag === "OPTION" || tag === "TEXTAREA") return;
+    if (e.key === "ArrowLeft") go(-1);
+    else if (e.key === "ArrowRight") go(1);
+  });
+  // keep "today" live: re-check every 30 seconds and repaint when the date rolls over
+  setInterval(() => { const t = today(); if (cmp(t, t0) !== 0) { t0 = t; render(); } }, 30000);
+
+  renderHead();
+  render();
+</script>

@@ -1,0 +1,53 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+const faq = [{ q: "How is GPA calculated?", a: "Each course's grade points are multiplied by its credits; the total is divided by total credits. A = 4.0, B = 3.0, C = 2.0, D = 1.0, F = 0, with plus and minus adjustments." }];
+const grades = [["A+", 4.0], ["A", 4.0], ["A-", 3.7], ["B+", 3.3], ["B", 3.0], ["B-", 2.7], ["C+", 2.3], ["C", 2.0], ["C-", 1.7], ["D+", 1.3], ["D", 1.0], ["F", 0]];
+---
+<CalcPage slug="gpa-calculator" title="GPA Calculator: Weighted Grade Average" description="Free GPA calculator on the 4.0 scale. Add your courses with letter grades and credit hours to get your weighted grade point average instantly. No sign-up." heading="GPA Calculator" intro="Add your courses with their grade and credits. Your GPA updates as you go." faq={faq}>
+  <section data-calc class="card-lg grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div>
+      <ul data-rows class="space-y-3"></ul>
+      <button type="button" data-add class="btn-ghost mt-4">Add course</button>
+    </div>
+    <div aria-live="polite" class="flex min-h-40 flex-col justify-center rounded-md border border-dashed border-hairline p-8 text-center">
+      <p class="eyebrow">Your GPA</p>
+      <p data-out="r" class="mt-2 text-3xl font-semibold text-ink sm:text-[40px]" style="letter-spacing:-0.05em;line-height:1.05">—</p>
+      <p data-out="c" class="mt-2"></p>
+    </div>
+  </section>
+  <template id="row">
+    <li class="flex items-end gap-2">
+      <div class="min-w-0 flex-1"><label class="field-label">Course (optional)</label><input class="input" data-name autocomplete="off" placeholder="e.g. Biology…" /></div>
+      <div class="w-24"><label class="field-label">Grade</label>
+        <select class="input" data-grade>{grades.map(([g, p]) => <option value={p} selected={g === "A"}>{g}</option>)}</select></div>
+      <div class="w-20"><label class="field-label">Credits</label><input class="input" data-credit inputmode="decimal" value="3" autocomplete="off" /></div>
+      <button type="button" data-del class="btn-ghost w-9 px-0" aria-label="Remove course"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </li>
+  </template>
+</CalcPage>
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-calc]")!;
+  const rows = root.querySelector<HTMLElement>("[data-rows]")!;
+  const tpl = document.querySelector<HTMLTemplateElement>("#row")!;
+  const out = (k: string) => root.querySelector<HTMLElement>(`[data-out=${k}]`)!;
+  function add() {
+    const li = (tpl.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLElement;
+    li.querySelector("[data-del]")!.addEventListener("click", () => { li.remove(); update(); });
+    li.querySelectorAll("input, select").forEach((i) => i.addEventListener("input", update));
+    rows.append(li);
+    update();
+  }
+  function update() {
+    let pts = 0, cr = 0;
+    rows.querySelectorAll("li").forEach((li) => {
+      const c = parseFloat(li.querySelector<HTMLInputElement>("[data-credit]")!.value);
+      const g = parseFloat(li.querySelector<HTMLSelectElement>("[data-grade]")!.value);
+      if (c > 0) { pts += c * g; cr += c; }
+    });
+    out("r").textContent = cr > 0 ? (pts / cr).toFixed(2) : "—";
+    out("c").textContent = cr > 0 ? `${cr} credits in total.` : "Add a course with credits.";
+  }
+  root.querySelector("[data-add]")!.addEventListener("click", add);
+  add(); add(); add();
+</script>

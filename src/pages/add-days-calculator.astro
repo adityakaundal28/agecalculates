@@ -1,0 +1,66 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+import DateFields from "../components/DateFields.astro";
+const faq = [
+  { q: "What happens when adding months lands on a missing day?", a: "The result is clamped to the last day of that month, so Jan 31 plus 1 month is Feb 28 (or 29 in a leap year)." },
+  { q: "Can I subtract days to find a past date?", a: "Yes. Choose Subtract, enter the amount and unit, and the calculator shows the earlier date and its weekday." },
+  { q: "Does it skip weekends or holidays?", a: "No. It counts every calendar day. To count only weekdays, use the Date Difference calculator, which reports business days." },
+  { q: "How far can I go?", a: "Any date from year 1 to year 9999 is supported." },
+];
+---
+<CalcPage slug="add-days-calculator" title="Add or Subtract Days From a Date" description="Add or subtract days, weeks, months or years from any date and get the result with its weekday. Great for deadlines, due dates and planning. Free and instant." heading="Add or Subtract Days" intro="Work out a deadline, a due date or a date in the past." faq={faq}>
+  <section data-calc class="card-lg grid gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+    <form class="space-y-6" onsubmit="return false" novalidate>
+      <DateFields name="start" legend="Start date" />
+      <div class="flex gap-2">
+        <div class="w-28"><label for="op" class="field-label">Operation</label>
+          <select id="op" class="input"><option value="1">Add</option><option value="-1">Subtract</option></select></div>
+        <div class="w-24"><label for="amt" class="field-label">Amount</label>
+          <input id="amt" class="input" inputmode="numeric" value="30" autocomplete="off" /></div>
+        <div class="min-w-0 flex-1"><label for="unit" class="field-label">Unit</label>
+          <select id="unit" class="input"><option value="d">Days</option><option value="w">Weeks</option><option value="m">Months</option><option value="y">Years</option></select></div>
+      </div>
+    </form>
+    <div aria-live="polite" class="flex min-h-48 flex-col justify-center rounded-md border border-dashed border-hairline p-8 text-center">
+      <p class="eyebrow">Result</p>
+      <p data-out="r" class="mt-2 text-3xl font-semibold text-ink sm:text-[40px]" style="letter-spacing:-0.05em;line-height:1.05">Pick a start date</p>
+      <p data-out="w" class="mt-2"></p>
+    </div>
+  </section>
+  <Fragment slot="content">
+    <section>
+      <h2 class="h-section">How to add or subtract days from a date</h2>
+      <ol class="mt-4 list-decimal space-y-2 pl-5 leading-6">
+        <li>Choose a start date. It defaults to today.</li>
+        <li>Pick Add or Subtract.</li>
+        <li>Type an amount and select days, weeks, months or years.</li>
+        <li>The new date appears at once, with the day of the week underneath.</li>
+      </ol>
+      <h3 class="h-card mt-6">Example</h3>
+      <p class="mt-2 leading-6">Adding 30 days to 15 March 2025 gives Monday, 14 April 2025. Adding 3 months to 31 May 2025 gives 31 August 2025, while adding 1 month to 31 January lands on 28 February because February has no 31st. This is handy for payment deadlines, warranty expiry, notice periods, course schedules and delivery estimates.</p>
+    </section>
+  </Fragment>
+</CalcPage>
+
+<script>
+  import { dateFields } from "../lib/datefields";
+  import { addDays, addMonths, formatLong, weekday, today } from "../lib/date";
+  const root = document.querySelector<HTMLElement>("[data-calc]")!;
+  const start = dateFields(root.querySelector<HTMLElement>("[data-datefields]")!, update);
+  const $ = <T extends HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const [op, amt, unit] = [$<HTMLSelectElement>("#op"), $<HTMLInputElement>("#amt"), $<HTMLSelectElement>("#unit")];
+  [op, amt, unit].forEach((e) => e.addEventListener("input", update));
+  start.set(today());
+  function update() {
+    const s = start.get();
+    const n = parseInt(amt.value.replace(/\D/g, ""), 10);
+    if (s.status !== "ok" || !s.value || !Number.isFinite(n)) { $("[data-out=r]").textContent = s.status === "invalid" ? "That date doesn't exist" : "Pick a start date"; $("[data-out=w]").textContent = ""; return; }
+    const k = Number(op.value) * n;
+    const u = unit.value;
+    const res = u === "d" ? addDays(s.value, k) : u === "w" ? addDays(s.value, k * 7) : addMonths(s.value, u === "m" ? k : k * 12);
+    if (res.y < 1 || res.y > 9999) { $("[data-out=r]").textContent = "Out of range"; $("[data-out=w]").textContent = ""; return; }
+    $("[data-out=r]").textContent = formatLong(res);
+    $("[data-out=w]").textContent = weekday(res);
+  }
+  update();
+</script>

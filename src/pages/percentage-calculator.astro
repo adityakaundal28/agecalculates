@@ -1,0 +1,41 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+const faq = [{ q: "How do I work out a percentage change?", a: "Subtract the old value from the new one, divide by the old value, and multiply by 100. A result of -20 means a 20% decrease." }];
+---
+<CalcPage slug="percentage-calculator" title="Percentage Calculator: Of, Change, Ratio" description="Free percentage calculator. Work out X% of Y, what percent one number is of another, and percent increase or decrease. Answers appear instantly as you type." heading="Percentage Calculator" intro="Three of the most common percentage questions, answered as you type." faq={faq}>
+  <div data-calc class="grid gap-4 md:grid-cols-3">
+    <section class="card" data-mode="of">
+      <h2 class="h-card">What is X% of Y?</h2>
+      <div class="mt-4 flex items-center gap-2"><input aria-label="Percent" class="input w-24" inputmode="decimal" data-a autocomplete="off" /><span>% of</span><input aria-label="Number" class="input min-w-0 flex-1" inputmode="decimal" data-b autocomplete="off" /></div>
+      <p class="stat-num mt-5 text-3xl" data-r aria-live="polite">—</p>
+    </section>
+    <section class="card" data-mode="is">
+      <h2 class="h-card">X is what % of Y?</h2>
+      <div class="mt-4 flex items-center gap-2"><input aria-label="X" class="input min-w-0 flex-1" inputmode="decimal" data-a autocomplete="off" /><span>of</span><input aria-label="Y" class="input min-w-0 flex-1" inputmode="decimal" data-b autocomplete="off" /></div>
+      <p class="stat-num mt-5 text-3xl" data-r aria-live="polite">—</p>
+    </section>
+    <section class="card" data-mode="chg">
+      <h2 class="h-card">Percent change</h2>
+      <div class="mt-4 flex items-center gap-2"><input aria-label="From" class="input min-w-0 flex-1" inputmode="decimal" data-a placeholder="From" autocomplete="off" /><span>to</span><input aria-label="To" class="input min-w-0 flex-1" inputmode="decimal" data-b placeholder="To" autocomplete="off" /></div>
+      <p class="stat-num mt-5 text-3xl" data-r aria-live="polite">—</p>
+    </section>
+  </div>
+</CalcPage>
+
+<script>
+  const fmt = (n: number) => (Math.round(n * 1e6) / 1e6).toLocaleString("en-US", { maximumFractionDigits: 6 });
+  document.querySelectorAll<HTMLElement>("[data-mode]").forEach((sec) => {
+    const [a, b] = ["[data-a]", "[data-b]"].map((s) => sec.querySelector<HTMLInputElement>(s)!);
+    const r = sec.querySelector<HTMLElement>("[data-r]")!;
+    const run = () => {
+      const x = parseFloat(a.value.replace(/,/g, "")), y = parseFloat(b.value.replace(/,/g, ""));
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return void (r.textContent = "—");
+      const m = sec.dataset.mode;
+      if (m === "of") r.textContent = fmt((x / 100) * y);
+      else if (y === 0) r.textContent = "Can't divide by 0";
+      else if (m === "is") r.textContent = fmt((x / y) * 100) + "%";
+      else r.textContent = x === 0 ? "Can't start from 0" : (y >= x ? "+" : "") + fmt(((y - x) / Math.abs(x)) * 100) + "%";
+    };
+    a.addEventListener("input", run); b.addEventListener("input", run);
+  });
+</script>

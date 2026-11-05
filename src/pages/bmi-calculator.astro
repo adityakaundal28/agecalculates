@@ -1,0 +1,57 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+const faq = [
+  { q: "What are the BMI categories?", a: "Under 18.5 is underweight, 18.5 to 24.9 is a healthy range, 25 to 29.9 is overweight, and 30 or more is obese (WHO adult categories)." },
+  { q: "Is BMI always accurate?", a: "No. BMI does not distinguish muscle from fat and is less reliable for athletes, older adults and children. Use it as a screening starting point, not a diagnosis." },
+];
+---
+<CalcPage slug="bmi-calculator" title="BMI Calculator: Metric and Imperial" description="Free BMI calculator for adults. Enter height and weight in kg/cm or lb/ft-in to see your BMI, WHO category and the healthy weight range for your height." heading="BMI Calculator" intro="Body mass index for adults, with the weight range that is healthy for your height." faq={faq}>
+  <section data-calc class="card-lg grid gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+    <form class="space-y-6" onsubmit="return false" novalidate>
+      <div class="flex gap-2" role="radiogroup" aria-label="Units">
+        <button type="button" role="radio" aria-checked="true" data-u="metric" class="pill-tab">Metric</button>
+        <button type="button" role="radio" aria-checked="false" data-u="imperial" class="pill-tab">Imperial</button>
+      </div>
+      <div data-g="metric" class="flex gap-3">
+        <div class="flex-1"><label for="cm" class="field-label">Height (cm)</label><input id="cm" class="input" inputmode="decimal" autocomplete="off" /></div>
+        <div class="flex-1"><label for="kg" class="field-label">Weight (kg)</label><input id="kg" class="input" inputmode="decimal" autocomplete="off" /></div>
+      </div>
+      <div data-g="imperial" class="hidden flex-wrap gap-3">
+        <div class="w-20"><label for="ft" class="field-label">Feet</label><input id="ft" class="input" inputmode="numeric" autocomplete="off" /></div>
+        <div class="w-20"><label for="in" class="field-label">Inches</label><input id="in" class="input" inputmode="decimal" autocomplete="off" /></div>
+        <div class="w-28"><label for="lb" class="field-label">Weight (lb)</label><input id="lb" class="input" inputmode="decimal" autocomplete="off" /></div>
+      </div>
+    </form>
+    <div aria-live="polite" class="flex min-h-48 flex-col justify-center rounded-md border border-dashed border-hairline p-8 text-center">
+      <p class="eyebrow">Your BMI</p>
+      <p data-out="r" class="mt-2 text-3xl font-semibold text-ink sm:text-[40px]" style="letter-spacing:-0.05em;line-height:1.05">Enter height and weight</p>
+      <p data-out="cat" class="mt-2 font-medium text-ink"></p>
+      <p data-out="range" class="mt-1"></p>
+    </div>
+  </section>
+</CalcPage>
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-calc]")!;
+  const $ = (id: string) => root.querySelector<HTMLInputElement>("#" + id)!;
+  const out = (k: string) => root.querySelector<HTMLElement>(`[data-out=${k}]`)!;
+  let unit: "metric" | "imperial" = "metric";
+  const num = (id: string) => parseFloat($(id).value.replace(",", "."));
+  root.querySelectorAll<HTMLButtonElement>("[data-u]").forEach((b) => b.addEventListener("click", () => {
+    unit = b.dataset.u as typeof unit;
+    root.querySelectorAll<HTMLButtonElement>("[data-u]").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+    root.querySelectorAll<HTMLElement>("[data-g]").forEach((g) => { const on = g.dataset.g === unit; g.classList.toggle("hidden", !on); g.classList.toggle("flex", on); });
+    update();
+  }));
+  root.querySelectorAll("input").forEach((i) => i.addEventListener("input", update));
+  function update() {
+    const m = unit === "metric" ? num("cm") / 100 : ((num("ft") || 0) * 12 + (num("in") || 0)) * 0.0254;
+    const kg = unit === "metric" ? num("kg") : num("lb") * 0.45359237;
+    if (!(m > 0.5 && m < 2.8 && kg > 10 && kg < 700)) { out("r").textContent = "Enter height and weight"; out("cat").textContent = ""; out("range").textContent = ""; return; }
+    const bmi = kg / (m * m);
+    out("r").textContent = bmi.toFixed(1);
+    out("cat").textContent = bmi < 18.5 ? "Underweight" : bmi < 25 ? "Healthy range" : bmi < 30 ? "Overweight" : "Obese";
+    const lo = 18.5 * m * m, hi = 24.9 * m * m;
+    out("range").textContent = unit === "metric" ? `Healthy weight for your height: ${lo.toFixed(1)} to ${hi.toFixed(1)} kg.` : `Healthy weight for your height: ${(lo / 0.45359237).toFixed(0)} to ${(hi / 0.45359237).toFixed(0)} lb.`;
+  }
+</script>

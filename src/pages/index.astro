@@ -1,0 +1,112 @@
+---
+import Layout from "../layouts/Layout.astro";
+import AgeCalculator from "../components/AgeCalculator.astro";
+import CalcCard from "../components/CalcCard.astro";
+import { calculators, categories } from "../data/calculators";
+
+const faq = [
+  { q: "How do I calculate my age by date of birth?", a: "Enter your date of birth in DD/MM/YYYY format and the age calculator instantly shows your exact age in years, months, days, hours and seconds. It updates as you type, so there is no button to press and nothing to install." },
+  { q: "How is age calculated exactly?", a: "Age is calculated by counting the complete years since your date of birth, then the full months after your last birthday, and then the remaining days. Leap years and the different lengths of months are taken into account, so the result is exact." },
+  { q: "Can I calculate my age on a specific date?", a: "Yes. Use the 'Age at the date of' field to choose any date in the past or future. This is useful for exam and job applications that ask for your age as on a cut-off date, or to find out how old you will be on a future day." },
+  { q: "Can I use this age calculator for government jobs and exams in India?", a: "Yes. Enter your date of birth and set 'Age at the date of' to the cut-off date given in the notification, for example 1 January or 1 August. The calculator uses the DD/MM/YYYY format common in India. Always confirm the final eligibility rules in the official notification." },
+  { q: "How do I calculate a child's age in months and weeks?", a: "Enter your child's date of birth and the age calculator shows their exact age in years, months and days, along with total months, weeks and days lived. This helps with school admissions, vaccination schedules and tracking baby milestones." },
+  { q: "How many days are left until my next birthday?", a: "After you enter your date of birth, the age calculator shows a live countdown to your next birthday, including the number of days left and the day of the week it falls on." },
+  { q: "Can I find the age difference between two people?", a: "Yes. Open 'Compare with another person' below the calculator and enter a second date of birth. You will see the exact age difference in years, months and days, which is handy for siblings, couples or friends." },
+  { q: "How is age calculated for someone born on 29 February?", a: "People born on 29 February still age one year every year. In non-leap years, many celebrate on 28 February or 1 March. The age calculator counts the exact number of days, so your age in years, months and days is always correct." },
+  { q: "Is this age calculator free and private?", a: "Yes. The age calculator is completely free, needs no sign-up, and runs entirely in your browser. Your date of birth is never sent to a server or stored anywhere, so it stays on your device." },
+  { q: "How do I calculate age in Excel?", a: "In Excel, put the date of birth in cell A1 and use the formula =DATEDIF(A1,TODAY(),\"Y\") to get the age in complete years. Use \"YM\" for the extra months and \"MD\" for the extra days. For a quick answer without formulas, use this online age calculator." },
+];
+const jsonLd = [
+  { "@context": "https://schema.org", "@type": "WebSite", name: "AgeCalculates", url: "https://agecalculates.com" },
+  { "@context": "https://schema.org", "@type": "WebApplication", name: "Age Calculator", url: "https://agecalculates.com", applicationCategory: "UtilitiesApplication", operatingSystem: "Any", offers: { "@type": "Offer", price: "0", priceCurrency: "USD" } },
+  { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
+];
+---
+<Layout title="Age Calculator – Exact Age by Date of Birth | AgeCalculates" description="Free age calculator by date of birth. Get your exact age in years, months, days and seconds – for adults and children in India and worldwide. No sign-up." jsonLd={jsonLd}>
+  <section class="relative isolate overflow-hidden">
+    <div class="hero-mesh absolute inset-x-0 top-0 -z-10 h-[520px]" aria-hidden="true"></div>
+    <div class="container-page pb-4 pt-14 sm:pt-24">
+      <div class="mx-auto max-w-3xl text-center">
+        <p class="eyebrow">agecalculates.com</p>
+        <h1 class="h-display mt-4">Age Calculator: Find Your Exact Age</h1>
+        <p class="mx-auto mt-5 max-w-xl text-base leading-6 text-body">Exact age down to the second, your next birthday, milestones and more.</p>
+      </div>
+      <div class="mt-10"><AgeCalculator /></div>
+    </div>
+  </section>
+
+  <section class="container-page mt-24" aria-labelledby="about-age-calculator">
+    <div class="max-w-3xl space-y-5 leading-7">
+      <h2 id="about-age-calculator" class="h-section">Free Age Calculator by Date of Birth</h2>
+      <p>Our age calculator tells you exactly how old you are in seconds. Type in your date of birth and this age calculator online shows your age in years, months, days, hours and even seconds, along with a countdown to your next birthday. There is nothing to download and nothing to sign up for, so you get an accurate answer on any phone, tablet or computer.</p>
+
+      <h3 class="h-card">How the age calculator of DOB works</h3>
+      <p>The age calculator of dob compares your birth date with today's date, or with any other date you choose. It counts whole calendar years first, then whole months, then the remaining days. This is the same method used on school forms, passports and job applications, so the result matches what officials expect. If you were born on February 29, the calculator treats February 28 as your birthday in non-leap years, keeping every milestone consistent.</p>
+
+      <h3 class="h-card">Age calculator of India</h3>
+      <p>Many people search for an age calculator of India because Indian forms ask for age on a fixed cut-off date. Examples include government job applications, competitive exams such as UPSC, SSC and banking tests, school and college admissions, and pension or insurance paperwork. With this tool you can set the "age on" date to the cut-off in the notification and see your exact age in years, months and days. That makes it easy to check eligibility, upper age limits and relaxation categories before you apply.</p>
+
+      <h3 class="h-card">Age calculator of child</h3>
+      <p>Parents often need an age calculator of child to track development. Enter your baby's or child's date of birth to see their age in months and days, which is helpful for vaccination schedules, pediatric check-ups, school entry rules and growth charts. For newborns, the day-level result is more useful than a rounded figure, because doctors usually talk in weeks and months during the first two years.</p>
+
+      <h3 class="h-card">Why use our age calculator app</h3>
+      <p>You do not need to install anything to enjoy an age calculator app experience. The site is fast, mobile friendly and works offline once loaded, and you can add it to your home screen for one-tap access. Every calculation happens inside your browser, so your date of birth is never sent to a server or stored. Results also live in the page address, which means you can bookmark a calculation or share it with friends and family.</p>
+
+      <h3 class="h-card">Who uses an online age calculator?</h3>
+      <p>Students use it to check admission eligibility, job seekers confirm exam age limits, and parents track a growing child. HR teams verify employee records, while families plan birthdays, anniversaries and retirement dates. Because the calculator is accurate to the day, it also helps with legal and medical paperwork where a rounded age is not enough. Whatever the reason, you get a clear, trustworthy answer in a moment.</p>
+
+      <h3 class="h-card">What else can you find out?</h3>
+      <ul class="list-disc space-y-2 pl-5">
+        <li>Your exact age in years, months, weeks, days, hours and seconds.</li>
+        <li>The number of days until your next birthday and the weekday it falls on.</li>
+        <li>Upcoming milestones, such as your 10,000th day alive.</li>
+        <li>The difference between Western age and traditional East Asian age.</li>
+        <li>Your Chinese zodiac animal and western star sign.</li>
+      </ul>
+
+      <h3 class="h-card">More than a calculator</h3>
+      <p>Beyond the age calculator, this site offers a date calculator, BMI calculator, percentage calculator, due date calculator, loan calculator and more. Each one is built to be simple, accurate and free. Use the search shortcut, Ctrl K, to jump to any calculator in a moment. Try the age calculator above now, and bookmark this page so the answer is always one click away.</p>
+    </div>
+
+    <div class="mt-12 max-w-3xl">
+      <h2 class="h-section">FAQ</h2>
+      <div class="mt-6 divide-y divide-hairline border-y border-hairline">
+        {faq.map((f) => (
+          <details class="group py-4">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-ink">
+              {f.q}
+              <svg class="shrink-0 transition-transform group-open:rotate-180" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </summary>
+            <p class="mt-3 leading-6">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section id="all-calculators" class="container-page mt-24 scroll-mt-20">
+    <p class="eyebrow">Calculators</p>
+    <h2 class="h-section mt-2">Everything else you need</h2>
+    <p class="mt-2">Press <kbd class="rounded-sm border border-hairline bg-elevated px-1.5 font-mono text-xs">Ctrl&nbsp;K</kbd> anywhere to jump to a calculator.</p>
+    <div class="mt-10 space-y-12">
+      {categories.map((cat) => (
+        <div>
+          <h3 class="mb-4 font-mono text-xs font-medium uppercase tracking-wider text-mute">{cat}</h3>
+          <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 [&>li]:h-full [&_.calc-card]:h-full">
+            {calculators.filter((c) => c.category === cat).map((c) => (
+              <li><CalcCard slug={c.slug} /></li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="container-page mt-24">
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="card"><p class="h-card">Private</p><p class="mt-1">No sign-up, no tracking of what you type. Calculations stay on your device.</p></div>
+      <div class="card"><p class="h-card">Shareable</p><p class="mt-1">Every result lives in the URL, so you can bookmark it or send it to a friend.</p></div>
+      <div class="card"><p class="h-card">Accessible</p><p class="mt-1">Keyboard friendly, screen-reader labelled, and available in light and dark.</p></div>
+    </div>
+  </section>
+</Layout>

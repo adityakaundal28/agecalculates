@@ -1,0 +1,73 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+import DateFields from "../components/DateFields.astro";
+const faq = [
+  { q: "Is the end date included?", a: "No. Monday to Tuesday is 1 day. Tick the box to include both the start and end dates in the count." },
+  { q: "How are business days counted?", a: "Monday to Friday between the two dates. Public holidays are not excluded because they differ by country." },
+  { q: "Can I count backwards from a later date?", a: "Yes. Enter the dates in either order and the calculator swaps them so the result is always positive." },
+  { q: "Does it handle leap years?", a: "Yes. Leap days such as 29 February are counted automatically, so long spans stay accurate." },
+];
+---
+<CalcPage slug="date-calculator" title="Days Between Two Dates Calculator" description="Free date difference calculator. Find the days, weeks, months and business days between any two dates, with an option to include the end date. Instant results." heading="Date Difference Calculator" intro="How long is it from one date to another? Get calendar time, total days and weekdays." faq={faq}>
+  <section data-calc class="card-lg grid gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+    <form class="space-y-6" onsubmit="return false" novalidate>
+      <DateFields name="from" legend="Start date" />
+      <DateFields name="to" legend="End date" />
+      <label class="flex items-center gap-2 text-ink"><input type="checkbox" data-incl class="size-4 accent-[var(--c-primary)]" /> Include the end date</label>
+    </form>
+    <div aria-live="polite">
+      <p data-out="msg" class="rounded-md border border-dashed border-hairline p-8 text-center text-body">Enter two dates to see the difference.</p>
+      <div data-out="result" class="hidden space-y-5">
+        <p class="eyebrow">Difference</p>
+        <p data-out="headline" class="text-3xl font-semibold text-ink sm:text-[40px]" style="letter-spacing:-0.05em;line-height:1.05"></p>
+        <dl class="grid grid-cols-3 gap-px overflow-hidden rounded-md border border-hairline bg-hairline">
+          <div class="bg-elevated p-4"><dt class="eyebrow">Days</dt><dd class="stat-num mt-1 text-xl" data-out="days"></dd></div>
+          <div class="bg-elevated p-4"><dt class="eyebrow">Weeks</dt><dd class="stat-num mt-1 text-xl" data-out="weeks"></dd></div>
+          <div class="bg-elevated p-4"><dt class="eyebrow">Business days</dt><dd class="stat-num mt-1 text-xl" data-out="biz"></dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+  <Fragment slot="content">
+    <section>
+      <h2 class="h-section">How to find the days between two dates</h2>
+      <ol class="mt-4 list-decimal space-y-2 pl-5 leading-6">
+        <li>Enter the start date using the day, month and year fields.</li>
+        <li>Enter the end date. Today is filled in for you by default.</li>
+        <li>Tick "Include the end date" if both days should count, for example a hotel stay or a leave period.</li>
+        <li>Read the result in years, months and days, plus total days, weeks and business days.</li>
+      </ol>
+      <h3 class="h-card mt-6">Example</h3>
+      <p class="mt-2 leading-6">From 1 January 2025 to 1 March 2025 is 2 months, or 59 days in total. That is 8 weeks and 3 days, and 41 business days from Monday to Friday. Ticking the include box makes it 60 days. Use this to plan project timelines, count down to an event, work out notice periods or check how long ago something happened.</p>
+    </section>
+  </Fragment>
+</CalcPage>
+
+<script>
+  import { dateFields } from "../lib/datefields";
+  import { span, cmp, diffDays, addDays, fmt, plural, today, weekday } from "../lib/date";
+  const root = document.querySelector<HTMLElement>("[data-calc]")!;
+  const out = (k: string) => root.querySelector<HTMLElement>(`[data-out="${k}"]`)!;
+  const f = (n: string) => dateFields(root.querySelector<HTMLElement>(`[data-datefields="${n}"]`)!, update);
+  const from = f("from"), to = f("to");
+  const incl = root.querySelector<HTMLInputElement>("[data-incl]")!;
+  incl.addEventListener("change", update);
+  to.set(today());
+  function update() {
+    const a = from.get(), b = to.get();
+    const show = (ok: boolean, msg = "") => { out("msg").classList.toggle("hidden", ok); out("result").classList.toggle("hidden", !ok); out("msg").textContent = msg; };
+    if (a.status === "invalid" || b.status === "invalid") return show(false, "One of those dates doesn't exist.");
+    if (a.status !== "ok" || b.status !== "ok" || !a.value || !b.value) return show(false, "Enter two dates to see the difference.");
+    let [s, e] = cmp(a.value, b.value) <= 0 ? [a.value, b.value] : [b.value, a.value];
+    if (incl.checked) e = addDays(e, 1);
+    const r = span(s, e);
+    let biz = 0;
+    for (let i = 0; i < r.totalDays; i++) { const dn = weekday(addDays(s, i)); if (dn !== "Saturday" && dn !== "Sunday") biz++; }
+    out("headline").textContent = [plural(r.years, "year"), plural(r.months, "month"), plural(r.days, "day")].join(", ");
+    out("days").textContent = fmt(diffDays(s, e));
+    out("weeks").textContent = `${fmt(Math.floor(r.totalDays / 7))} wk ${r.totalDays % 7} d`;
+    out("biz").textContent = fmt(biz);
+    show(true);
+  }
+  update();
+</script>

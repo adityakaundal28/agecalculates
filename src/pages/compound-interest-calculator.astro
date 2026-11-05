@@ -1,0 +1,53 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+const faq = [
+  { q: "How often is interest compounded?", a: "You choose: monthly, quarterly or yearly. Deposits are added at the end of each month." },
+  { q: "Is inflation or tax included?", a: "No. The result is a nominal projection and not a guarantee of returns." },
+];
+---
+<CalcPage slug="compound-interest-calculator" title="Compound Interest Calculator" description="Free compound interest calculator with monthly deposits. See how your starting balance grows over time, with total interest earned and the final amount." heading="Compound Interest Calculator" intro="Project your savings with a starting balance, regular deposits and compounding." faq={faq}>
+  <section data-calc class="card-lg grid gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+    <form class="space-y-5" onsubmit="return false" novalidate>
+      <div><label for="p" class="field-label">Starting amount</label><input id="p" class="input" inputmode="decimal" value="10000" autocomplete="off" /></div>
+      <div><label for="m" class="field-label">Monthly deposit</label><input id="m" class="input" inputmode="decimal" value="200" autocomplete="off" /></div>
+      <div class="flex gap-3">
+        <div class="flex-1"><label for="rate" class="field-label">Rate (% / year)</label><input id="rate" class="input" inputmode="decimal" value="5" autocomplete="off" /></div>
+        <div class="w-28"><label for="yrs" class="field-label">Years</label><input id="yrs" class="input" inputmode="decimal" value="10" autocomplete="off" /></div>
+      </div>
+      <div><label for="n" class="field-label">Compounding</label><select id="n" class="input"><option value="12">Monthly</option><option value="4">Quarterly</option><option value="1">Yearly</option></select></div>
+    </form>
+    <div aria-live="polite">
+      <p class="eyebrow">Future value</p>
+      <p data-out="fv" class="mt-2 text-3xl font-semibold text-ink sm:text-[40px]" style="letter-spacing:-0.05em;line-height:1.05">—</p>
+      <dl class="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-hairline bg-hairline">
+        <div class="bg-elevated p-4"><dt class="eyebrow">Total contributed</dt><dd class="stat-num mt-1 text-xl" data-out="c">—</dd></div>
+        <div class="bg-elevated p-4"><dt class="eyebrow">Interest earned</dt><dd class="stat-num mt-1 text-xl" data-out="i">—</dd></div>
+      </dl>
+    </div>
+  </section>
+</CalcPage>
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-calc]")!;
+  const $ = (id: string) => root.querySelector<HTMLInputElement>("#" + id)!;
+  const out = (k: string) => root.querySelector<HTMLElement>(`[data-out=${k}]`)!;
+  const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+  const v = (id: string) => parseFloat($(id).value.replace(/,/g, ""));
+  function update() {
+    const P = v("p") || 0, M = v("m") || 0, rate = v("rate"), yrs = v("yrs"), n = +$("n").value;
+    if (!(P >= 0 && M >= 0 && rate >= 0 && rate <= 100 && yrs > 0 && yrs <= 100) || P + M === 0) { for (const k of ["fv", "c", "i"]) out(k).textContent = "—"; return; }
+    // simulate month by month; interest accrues at the compounding frequency
+    const months = Math.round(yrs * 12), per = 12 / n;
+    let bal = P;
+    for (let k = 1; k <= months; k++) {
+      bal += M;
+      if (k % per === 0) bal *= 1 + rate / 100 / n;
+    }
+    const contributed = P + M * months;
+    out("fv").textContent = money(bal);
+    out("c").textContent = money(contributed);
+    out("i").textContent = money(bal - contributed);
+  }
+  root.querySelectorAll("input, select").forEach((i) => i.addEventListener("input", update));
+  update();
+</script>

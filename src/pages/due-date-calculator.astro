@@ -1,0 +1,47 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+import DateFields from "../components/DateFields.astro";
+const faq = [
+  { q: "How is the due date estimated?", a: "Using Naegele's rule: 280 days (40 weeks) after the first day of the last menstrual period, adjusted if your cycle is longer or shorter than 28 days." },
+  { q: "How accurate is it?", a: "Only about 4% of babies arrive on the estimated date. Most are born within two weeks either side. Your midwife or doctor may refine it with an ultrasound." },
+];
+---
+<CalcPage slug="due-date-calculator" title="Due Date Calculator From LMP" description="Estimate your pregnancy due date from the first day of your last period. See your current week and trimester. For information only, not medical advice." heading="Due Date Calculator" intro="Estimate your due date and see how far along you are. For information only, not medical advice." faq={faq}>
+  <section data-calc class="card-lg grid gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+    <form class="space-y-6" onsubmit="return false" novalidate>
+      <DateFields name="lmp" legend="First day of last period" />
+      <div class="w-40"><label for="cycle" class="field-label">Cycle length (days)</label>
+        <input id="cycle" class="input" inputmode="numeric" value="28" autocomplete="off" /></div>
+    </form>
+    <div aria-live="polite" class="flex min-h-48 flex-col justify-center rounded-md border border-dashed border-hairline p-8 text-center">
+      <p class="eyebrow">Estimated due date</p>
+      <p data-out="r" class="mt-2 text-3xl font-semibold text-ink sm:text-[40px]" style="letter-spacing:-0.05em;line-height:1.05">Enter a date</p>
+      <p data-out="w" class="mt-2"></p>
+    </div>
+  </section>
+</CalcPage>
+
+<script>
+  import { dateFields } from "../lib/datefields";
+  import { addDays, diffDays, formatLong, today, cmp, plural } from "../lib/date";
+  const root = document.querySelector<HTMLElement>("[data-calc]")!;
+  const lmp = dateFields(root.querySelector<HTMLElement>("[data-datefields]")!, update);
+  const cycle = root.querySelector<HTMLInputElement>("#cycle")!;
+  cycle.addEventListener("input", update);
+  const r = root.querySelector<HTMLElement>("[data-out=r]")!, w = root.querySelector<HTMLElement>("[data-out=w]")!;
+  function update() {
+    const s = lmp.get();
+    const c = parseInt(cycle.value, 10);
+    if (s.status !== "ok" || !s.value) { r.textContent = s.status === "invalid" ? "That date doesn't exist" : "Enter a date"; w.textContent = ""; return; }
+    if (!(c >= 20 && c <= 45)) { r.textContent = "Cycle must be 20 to 45 days"; w.textContent = ""; return; }
+    const due = addDays(s.value, 280 + (c - 28));
+    r.textContent = formatLong(due);
+    const now = today();
+    if (cmp(now, s.value) < 0) { w.textContent = "That period starts in the future."; return; }
+    const d = diffDays(s.value, now);
+    if (d > 300) { w.textContent = "That date is too long ago for a current pregnancy."; return; }
+    const wk = Math.floor(d / 7), tri = wk < 13 ? "first" : wk < 28 ? "second" : "third";
+    w.textContent = `Today you would be ${plural(wk, "week")} and ${plural(d % 7, "day")} along (${tri} trimester).`;
+  }
+  update();
+</script>

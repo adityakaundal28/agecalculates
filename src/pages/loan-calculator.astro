@@ -1,0 +1,51 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+const faq = [
+  { q: "What formula is used?", a: "The standard fixed-rate amortisation formula: payment = P·r / (1 − (1 + r)^−n), where r is the monthly rate and n the number of monthly payments." },
+  { q: "Does it include fees or insurance?", a: "No. Results cover principal and interest only, so your lender's quote may differ." },
+];
+---
+<CalcPage slug="loan-calculator" title="Loan Calculator: EMI and Total Interest" description="Free loan calculator for fixed-rate loans. Get your monthly payment (EMI), total interest and total cost from the amount, rate and term. Plan repayments easily." heading="Loan Calculator" intro="Monthly payment, total interest and total cost for any fixed-rate loan." faq={faq}>
+  <section data-calc class="card-lg grid gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+    <form class="space-y-5" onsubmit="return false" novalidate>
+      <div><label for="p" class="field-label">Loan amount</label><input id="p" class="input" inputmode="decimal" value="25000" autocomplete="off" /></div>
+      <div class="flex gap-3">
+        <div class="flex-1"><label for="rate" class="field-label">Interest rate (% / year)</label><input id="rate" class="input" inputmode="decimal" value="6.5" autocomplete="off" /></div>
+        <div class="w-28"><label for="yrs" class="field-label">Term (years)</label><input id="yrs" class="input" inputmode="decimal" value="5" autocomplete="off" /></div>
+      </div>
+    </form>
+    <div aria-live="polite">
+      <p class="eyebrow">Monthly payment</p>
+      <p data-out="pay" class="mt-2 text-3xl font-semibold text-ink sm:text-[40px]" style="letter-spacing:-0.05em;line-height:1.05">—</p>
+      <dl class="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-hairline bg-hairline">
+        <div class="bg-elevated p-4"><dt class="eyebrow">Total interest</dt><dd class="stat-num mt-1 text-xl" data-out="int">—</dd></div>
+        <div class="bg-elevated p-4"><dt class="eyebrow">Total paid</dt><dd class="stat-num mt-1 text-xl" data-out="tot">—</dd></div>
+      </dl>
+      <div class="mt-4 h-2 overflow-hidden rounded-full bg-hairline-soft" role="img" aria-label="Share of total paid that is interest"><div data-out="bar" class="h-full bg-primary" style="width:0%"></div></div>
+      <p class="mt-1.5 text-xs text-mute" data-out="share"></p>
+    </div>
+  </section>
+</CalcPage>
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-calc]")!;
+  const $ = (id: string) => root.querySelector<HTMLInputElement>("#" + id)!;
+  const out = (k: string) => root.querySelector<HTMLElement>(`[data-out=${k}]`)!;
+  const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+  const val = (id: string) => parseFloat($(id).value.replace(/,/g, ""));
+  function update() {
+    const P = val("p"), yr = val("yrs"), apr = val("rate");
+    if (!(P > 0 && yr > 0 && yr <= 50 && apr >= 0 && apr <= 100)) { for (const k of ["pay", "int", "tot"]) out(k).textContent = "—"; out("share").textContent = ""; out("bar").style.width = "0%"; return; }
+    const n = Math.round(yr * 12), r = apr / 1200;
+    const pay = r === 0 ? P / n : (P * r) / (1 - Math.pow(1 + r, -n));
+    const total = pay * n;
+    out("pay").textContent = money(pay);
+    out("int").textContent = money(total - P);
+    out("tot").textContent = money(total);
+    const pct = ((total - P) / total) * 100;
+    out("bar").style.width = pct.toFixed(1) + "%";
+    out("share").textContent = `${pct.toFixed(1)}% of what you pay is interest.`;
+  }
+  root.querySelectorAll("input").forEach((i) => i.addEventListener("input", update));
+  update();
+</script>

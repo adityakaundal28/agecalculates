@@ -1,0 +1,55 @@
+---
+import CalcPage from "../layouts/CalcPage.astro";
+const faq = [
+  { q: "How are overnight shifts handled?", a: "If the end time is earlier than the start time, we assume it is the next day, so 22:00 to 06:00 is 8 hours." },
+  { q: "Can I subtract an unpaid break?", a: "Yes. Enter the break in minutes and it is deducted from the total. The result is also shown as decimal hours for payroll." },
+  { q: "Does it use 12-hour or 24-hour time?", a: "The time fields follow your device settings. Internally everything is calculated on a 24-hour clock." },
+  { q: "What if my shift is longer than 24 hours?", a: "The calculator covers a single span of up to 24 hours. For longer periods, use the Date Difference calculator." },
+];
+---
+<CalcPage slug="time-calculator" title="Time Duration Calculator" description="Free time duration calculator. Find the hours and minutes between a start and end time, including overnight shifts and unpaid breaks. Ideal for timesheets." heading="Time Duration Calculator" intro="Hours worked between a start and end time, minus any break." faq={faq}>
+  <section data-calc class="card-lg grid gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
+    <form class="space-y-5" onsubmit="return false" novalidate>
+      <div class="flex gap-3">
+        <div class="flex-1"><label for="s" class="field-label">Start time</label><input id="s" type="time" class="input" value="09:00" /></div>
+        <div class="flex-1"><label for="e" class="field-label">End time</label><input id="e" type="time" class="input" value="17:30" /></div>
+      </div>
+      <div class="w-40"><label for="b" class="field-label">Break (minutes)</label><input id="b" class="input" inputmode="numeric" value="30" autocomplete="off" /></div>
+    </form>
+    <div aria-live="polite" class="flex min-h-48 flex-col justify-center rounded-md border border-dashed border-hairline p-8 text-center">
+      <p class="eyebrow">Duration</p>
+      <p data-out="r" class="mt-2 text-3xl font-semibold text-ink sm:text-[40px]" style="letter-spacing:-0.05em;line-height:1.05">—</p>
+      <p data-out="d" class="mt-2"></p>
+    </div>
+  </section>
+  <Fragment slot="content">
+    <section>
+      <h2 class="h-section">How to calculate hours between two times</h2>
+      <ol class="mt-4 list-decimal space-y-2 pl-5 leading-6">
+        <li>Enter the start time and the end time.</li>
+        <li>Add any unpaid break in minutes, or set it to 0.</li>
+        <li>Read the total in hours and minutes, and as decimal hours for timesheets.</li>
+      </ol>
+      <h3 class="h-card mt-6">Example</h3>
+      <p class="mt-2 leading-6">A shift from 09:00 to 17:30 with a 30 minute break is 8 hours 0 minutes, or 8.00 decimal hours. A night shift from 22:00 to 06:00 with no break is 8 hours because the calculator knows the end falls on the next day. Use it for timesheets, overtime checks, freelance billing and shift planning, and multiply the decimal hours by an hourly rate to estimate pay.</p>
+    </section>
+  </Fragment>
+</CalcPage>
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-calc]")!;
+  const $ = (id: string) => root.querySelector<HTMLInputElement>("#" + id)!;
+  const r = root.querySelector<HTMLElement>("[data-out=r]")!, d = root.querySelector<HTMLElement>("[data-out=d]")!;
+  const mins = (v: string) => { const m = /^(\d{2}):(\d{2})$/.exec(v); return m ? +m[1] * 60 + +m[2] : NaN; };
+  function update() {
+    const s = mins($("s").value), e = mins($("e").value), b = parseInt($("b").value, 10) || 0;
+    if (Number.isNaN(s) || Number.isNaN(e)) { r.textContent = "—"; d.textContent = ""; return; }
+    let t = e - s; if (t <= 0) t += 1440;
+    t -= b;
+    if (t < 0) { r.textContent = "Break is longer than the shift"; d.textContent = ""; return; }
+    r.textContent = `${Math.floor(t / 60)} h ${t % 60} min`;
+    d.textContent = `${(t / 60).toFixed(2)} decimal hours${b ? `, after a ${b} minute break` : ""}.`;
+  }
+  root.querySelectorAll("input").forEach((i) => i.addEventListener("input", update));
+  update();
+</script>

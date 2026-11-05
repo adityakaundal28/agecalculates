@@ -1,0 +1,25 @@
+---
+import Layout from "../layouts/Layout.astro";
+import CalcCard from "../components/CalcCard.astro";
+import { calculators, categories } from "../data/calculators";
+---
+<Layout title="All Calculators" description="Browse every free calculator on AgeCalculates: date and time, health, math and finance tools. Private, instant and with no sign-up required.">
+  <div class="relative isolate overflow-x-clip">
+    <div class="hero-mesh absolute inset-x-0 top-0 -z-10 h-[420px]" aria-hidden="true"></div>
+    <div class="container-page pt-10 sm:pt-14">
+      <p class="eyebrow mb-4">Calculators</p>
+      <h1 class="h-display">All Calculators</h1>
+      <p class="mt-4 max-w-2xl text-base leading-6 text-body">Every tool in one place. Press <kbd class="rounded-sm border border-hairline bg-elevated px-1.5 font-mono text-xs">Ctrl&nbsp;K</kbd> to search.</p>
+      <div class="mt-10 space-y-12">
+        {categories.map((cat) => (
+          <section aria-labelledby={`cat-${cat}`}>
+            <h2 id={`cat-${cat}`} class="mb-4 font-mono text-xs font-medium uppercase tracking-wider text-mute">{cat}</h2>
+            <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 [&>li]:h-full [&_.calc-card]:h-full">
+              {calculators.filter((c) => c.category === cat).map((c) => <li><CalcCard slug={c.slug} /></li>)}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>

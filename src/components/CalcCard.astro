@@ -1,0 +1,16 @@
+---
+import { bySlug, accentOf } from "../data/calculators";
+import { iconSvg } from "../lib/icons";
+
+interface Props { slug: string }
+const c = bySlug(Astro.props.slug);
+const accent = accentOf(c);
+---
+<a href={`/${c.slug}`} class="calc-card" style={`--accent:${accent}`}>
+  <span class="calc-card__watermark" aria-hidden="true" set:html={iconSvg(c.icon, 150, 1.5)} />
+  <span class="calc-card__body">
+    <span class="calc-card__icon" aria-hidden="true" set:html={iconSvg(c.icon, 22, 2)} />
+    <span class="h-card block">{c.name}</span>
+    <span class="mt-1 block">{c.desc}</span>
+  </span>
+</a>

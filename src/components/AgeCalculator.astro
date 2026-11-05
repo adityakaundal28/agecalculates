@@ -1,0 +1,241 @@
+---
+import DateFields from "./DateFields.astro";
+---
+<section data-age-calc aria-label="Age calculator" class="card-lg grid gap-8 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:gap-10">
+  <form class="space-y-6" onsubmit="return false" novalidate>
+    <DateFields name="dob" legend="Date of birth" bday hint="Day, month, year. Fields advance as you type." />
+    <div>
+      <DateFields name="on" legend="Age at the date of" />
+      <button type="button" data-action="today" class="mt-2 text-xs font-medium text-link hover:underline">Use today's date</button>
+    </div>
+    <details class="group rounded-sm border border-hairline">
+      <summary class="flex h-11 cursor-pointer list-none items-center justify-between px-3 text-sm font-medium text-ink">
+        Compare with another person
+        <svg class="transition-transform group-open:rotate-180" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="border-t border-hairline p-3">
+        <DateFields name="other" legend="Their date of birth" />
+        <p class="mt-3 text-sm text-ink" data-out="compare" aria-live="polite"></p>
+      </div>
+    </details>
+  </form>
+
+  <div class="min-w-0" aria-live="polite">
+    <div data-out="empty" class="flex h-full min-h-64 flex-col items-center justify-center rounded-md border border-dashed border-hairline p-8 text-center">
+      <p class="eyebrow">Result</p>
+      <p class="mt-2 text-lg font-semibold text-ink">Enter a date of birth to see the exact age.</p>
+      <p class="mt-1 max-w-sm text-body">Updates as you type. Nothing leaves your device.</p>
+    </div>
+    <p data-out="error" class="hidden rounded-md border border-error/40 p-4 text-error" role="alert"></p>
+
+    <div data-out="result" class="hidden space-y-6">
+      <div>
+        <p class="eyebrow">Your age</p>
+        <p data-out="headline" class="mt-2 text-balance text-3xl font-semibold text-ink sm:text-[40px]" style="letter-spacing:-0.05em;line-height:1.05"></p>
+        <p data-out="subline" class="mt-2 text-body"></p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button type="button" data-action="copy" class="btn-ghost">Copy result</button>
+          <button type="button" data-action="share" class="btn-ghost">Copy link</button>
+          <span data-out="copied" class="self-center text-xs text-mute" role="status"></span>
+        </div>
+      </div>
+
+      <dl class="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-hairline bg-hairline sm:grid-cols-3">
+        <div class="bg-elevated p-4"><dt class="eyebrow">Months</dt><dd class="stat-num mt-1 text-xl" data-out="t-months"></dd></div>
+        <div class="bg-elevated p-4"><dt class="eyebrow">Weeks</dt><dd class="stat-num mt-1 text-xl" data-out="t-weeks"></dd></div>
+        <div class="bg-elevated p-4"><dt class="eyebrow">Days</dt><dd class="stat-num mt-1 text-xl" data-out="t-days"></dd></div>
+        <div class="bg-elevated p-4"><dt class="eyebrow">Hours</dt><dd class="stat-num mt-1 text-xl" data-out="t-hours"></dd></div>
+        <div class="bg-elevated p-4"><dt class="eyebrow">Minutes</dt><dd class="stat-num mt-1 text-xl" data-out="t-minutes"></dd></div>
+        <div class="bg-elevated p-4"><dt class="eyebrow">Seconds</dt><dd class="stat-num mt-1 text-xl" data-out="t-seconds"></dd></div>
+      </dl>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="rounded-md border border-hairline p-4">
+          <p class="eyebrow">Next birthday</p>
+          <p class="mt-2 text-lg font-semibold text-ink" data-out="nb-title" style="letter-spacing:-0.02em"></p>
+          <p class="mt-1" data-out="nb-sub"></p>
+          <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-hairline-soft" role="progressbar" aria-label="Progress through this age year" aria-valuemin="0" aria-valuemax="100" data-out="nb-bar">
+            <div class="h-full rounded-full bg-primary transition-[width] duration-500 motion-reduce:transition-none" data-out="nb-fill" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="rounded-md border border-hairline p-4">
+          <p class="eyebrow">About your birth date</p>
+          <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+            <dt class="text-mute">Born on</dt><dd class="text-right text-ink" data-out="a-weekday"></dd>
+            <dt class="text-mute">Zodiac</dt><dd class="text-right text-ink" data-out="a-zodiac"></dd>
+            <dt class="text-mute">Chinese zodiac</dt><dd class="text-right text-ink" data-out="a-chinese"></dd>
+            <dt class="text-mute">Birthstone</dt><dd class="text-right text-ink" data-out="a-stone"></dd>
+            <dt class="text-mute">Generation</dt><dd class="text-right text-ink" data-out="a-gen"></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="rounded-md border border-hairline p-4">
+        <p class="eyebrow">Milestones</p>
+        <ul class="mt-3 divide-y divide-hairline" data-out="milestones"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div data-out="poll" role="status" class="pointer-events-none fixed bottom-5 right-5 z-50 flex translate-y-2 items-center gap-3 rounded-full border border-hairline bg-elevated px-4 py-2 text-sm text-ink opacity-0 shadow-lg transition-all duration-500 motion-reduce:transition-none" aria-hidden="true">
+    <span data-out="poll-q">Most people are surprised by their real age. Are you?</span>
+    <span class="flex items-center gap-3" data-out="poll-opts">
+      <button type="button" data-poll="yes" class="flex items-center gap-1.5 text-xs text-mute hover:text-ink" aria-label="Yes"><span class="h-3 w-3 rounded-full border border-mute bg-transparent hover:bg-primary"></span>Yes</button>
+      <button type="button" data-poll="no" class="flex items-center gap-1.5 text-xs text-mute hover:text-ink" aria-label="No"><span class="h-3 w-3 rounded-full border border-mute bg-transparent hover:bg-primary"></span>No</button>
+    </span>
+  </div>
+</section>
+
+<script>
+  import { computeAge, milestones, type System } from "../lib/age";
+  import { dateFields } from "../lib/datefields";
+  import { today, toISO, parseISO, span, cmp, fmt, plural, formatLong, type YMD } from "../lib/date";
+
+  const root = document.querySelector<HTMLElement>("[data-age-calc]")!;
+  const out = (k: string) => root.querySelector<HTMLElement>(`[data-out="${k}"]`)!;
+  const field = (n: string) => root.querySelector<HTMLElement>(`[data-datefields="${n}"]`)!;
+  const system: System = "western";
+  let ticker: number | undefined;
+  let lastText = "";
+
+  const dob = dateFields(field("dob"), update);
+  const on = dateFields(field("on"), update);
+  const other = dateFields(field("other"), update);
+
+  const ymdLabel = (s: { years: number; months: number; days: number }) =>
+    [plural(s.years, "year"), plural(s.months, "month"), plural(s.days, "day")].join(", ");
+  const show = (key: "empty" | "error" | "result") => {
+    for (const k of ["empty", "error", "result"]) out(k).classList.toggle("hidden", k !== key);
+  };
+  const sameDay = (a: YMD, b: YMD) => cmp(a, b) === 0;
+
+  function syncUrl(d: YMD | undefined, o: YMD | undefined) {
+    const p = new URLSearchParams();
+    if (d) p.set("dob", toISO(d));
+    if (o && !sameDay(o, today())) p.set("on", toISO(o));
+    if (d && system !== "western") p.set("sys", system);
+    const q = p.toString();
+    history.replaceState(null, "", location.pathname + (q ? `?${q}` : ""));
+  }
+
+  function update() {
+    if (ticker) clearInterval(ticker);
+    const d = dob.get();
+    const o = on.get();
+
+    if (d.status === "empty") { syncUrl(undefined, undefined); show("empty"); updateCompare(undefined, undefined); return; }
+    if (d.status === "invalid") { out("error").textContent = "That date of birth doesn't exist. Check the day and month."; show("error"); return; }
+    if (d.status !== "ok" || !d.value) { show("empty"); return; }
+    if (o.status === "invalid") { out("error").textContent = "The “age at” date doesn't exist. Check the day and month."; show("error"); return; }
+    const target = o.status === "ok" && o.value ? o.value : today();
+    if (cmp(d.value, target) > 0) { out("error").textContent = "The date of birth is after the “age at” date."; show("error"); return; }
+    if (d.value.y < 1000) { out("error").textContent = "Enter a four-digit year."; show("error"); return; }
+
+    const r = computeAge(d.value, target, system);
+    const firstResult = out("result").classList.contains("hidden");
+    show("result");
+    if (firstResult) showPoll();
+    syncUrl(d.value, target);
+
+    const western = ymdLabel(r);
+    out("headline").textContent = system === "east-asian" ? `${plural(r.headlineYears, "year")} old` : western;
+    out("subline").textContent = system === "east-asian" ? `Western age: ${western}.` : `Born on ${r.bornOn}, ${formatLong(d.value)}.`;
+    out("t-months").textContent = fmt(r.totalMonths);
+    out("t-weeks").textContent = fmt(r.totalWeeks);
+    out("t-days").textContent = fmt(r.totalDays);
+    out("t-hours").textContent = fmt(r.totalHours);
+    out("t-minutes").textContent = fmt(r.totalMinutes);
+    out("t-seconds").textContent = fmt(r.totalSeconds);
+
+    const nb = r.nextBirthday;
+    out("nb-title").textContent = nb.daysUntil === 0 ? "Happy birthday! 🎉" : `In ${plural(nb.daysUntil, "day")}`;
+    out("nb-sub").textContent = `Turning ${nb.turning} on ${nb.weekday}, ${formatLong(nb.date)}.`;
+    const pct = Math.round(r.progress * 100);
+    out("nb-fill").style.width = `${pct}%`;
+    out("nb-bar").setAttribute("aria-valuenow", String(pct));
+    out("a-weekday").textContent = r.bornOn;
+    out("a-zodiac").textContent = r.zodiac;
+    out("a-chinese").textContent = r.chinese;
+    out("a-stone").textContent = r.birthstone;
+    out("a-gen").textContent = r.generation;
+
+    const ul = out("milestones");
+    ul.replaceChildren();
+    for (const m of milestones(d.value, target)) {
+      const li = document.createElement("li");
+      li.className = "flex items-baseline justify-between gap-4 py-2";
+      const a = document.createElement("span");
+      a.className = m.past ? "text-mute" : "text-ink";
+      a.textContent = m.label;
+      const b = document.createElement("span");
+      b.className = "text-right text-xs text-mute";
+      b.textContent = m.past ? `${m.weekday}, ${m.text}` : `${m.weekday}, ${m.text} · in ${plural(m.daysAway, "day")}`;
+      li.append(a, b);
+      ul.append(li);
+    }
+
+    lastText = `${system === "east-asian" ? plural(r.headlineYears, "year") + " old" : western} (born ${formatLong(d.value)}, as of ${formatLong(target)}). ${fmt(r.totalDays)} days in total.`;
+    updateCompare(d.value, target);
+
+    // live seconds when measuring up to today
+    if (sameDay(target, today())) {
+      const born = new Date(d.value.y, d.value.m - 1, d.value.d).getTime();
+      const tick = () => { out("t-seconds").textContent = fmt(Math.floor((Date.now() - born) / 1000)); };
+      tick();
+      ticker = window.setInterval(tick, 1000);
+    }
+  }
+
+  function updateCompare(a: YMD | undefined, _t: YMD | undefined) {
+    const o = other.get();
+    const el = out("compare");
+    if (o.status !== "ok" || !o.value || !a) { el.textContent = o.status === "invalid" ? "That date doesn't exist." : ""; return; }
+    if (sameDay(a, o.value)) { el.textContent = "You were born on the same day."; return; }
+    const you = cmp(a, o.value) < 0;
+    const s = span(you ? a : o.value, you ? o.value : a);
+    el.textContent = `${you ? "You are" : "They are"} ${ymdLabel(s)} older (${fmt(s.totalDays)} days).`;
+  }
+
+  root.querySelector('[data-action="today"]')!.addEventListener("click", () => { on.set(null); update(); });
+
+  const flash = (msg: string) => { out("copied").textContent = msg; setTimeout(() => (out("copied").textContent = ""), 2000); };
+  const copy = async (text: string) => {
+    try { await navigator.clipboard.writeText(text); flash("Copied"); } catch { flash("Copy failed"); }
+  };
+  root.querySelector('[data-action="copy"]')!.addEventListener("click", () => copy(lastText));
+  root.querySelector('[data-action="share"]')!.addEventListener("click", () => copy(location.href));
+
+  // subtle feedback pop-up
+  const poll = out("poll");
+  let pollTimer: number | undefined;
+  let pollDone = false;
+  function setPoll(on: boolean) {
+    poll.classList.toggle("opacity-0", !on);
+    poll.classList.toggle("translate-y-2", !on);
+    poll.classList.toggle("pointer-events-none", !on);
+    poll.setAttribute("aria-hidden", String(!on));
+  }
+  function showPoll() {
+    if (pollDone) return;
+    clearTimeout(pollTimer);
+    setPoll(true);
+    pollTimer = window.setTimeout(() => setPoll(false), 12000);
+  }
+  poll.querySelectorAll<HTMLButtonElement>("[data-poll]").forEach((b) =>
+    b.addEventListener("click", () => {
+      pollDone = true;
+      clearTimeout(pollTimer);
+      out("poll-q").textContent = b.dataset.poll === "yes" ? "Thought so! 🎉" : "Fair enough!";
+      out("poll-opts").classList.add("hidden");
+      pollTimer = window.setTimeout(() => setPoll(false), 1800);
+    }),
+  );
+
+  // restore from URL
+  const params = new URLSearchParams(location.search);
+  const pd = parseISO(params.get("dob"));
+  if (pd) dob.set(pd);
+  const po = parseISO(params.get("on"));
+  if (po) on.set(po);
+  update();
+</script>

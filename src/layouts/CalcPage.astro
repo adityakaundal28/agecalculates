@@ -1,0 +1,65 @@
+---
+import Layout from "./Layout.astro";
+import CalcCard from "../components/CalcCard.astro";
+import { bySlug, calculators } from "../data/calculators";
+
+interface Props {
+  slug: string;
+  title: string;
+  description: string;
+  heading: string;
+  intro: string;
+  faq?: { q: string; a: string }[];
+}
+const { slug, title, description, heading, intro, faq = [] } = Astro.props;
+const me = bySlug(slug);
+const related = calculators.filter((c) => c.slug !== slug && c.category === me.category).concat(calculators.filter((c) => c.slug !== slug && c.category !== me.category)).slice(0, 3);
+const jsonLd: object[] = [
+  {
+    "@context": "https://schema.org", "@type": "WebApplication", name: me.name, url: new URL(`/${slug}`, Astro.site).href,
+    applicationCategory: "UtilitiesApplication", operatingSystem: "Any", offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  },
+];
+if (faq.length) jsonLd.push({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) });
+---
+<Layout title={title} description={description} jsonLd={jsonLd}>
+  <div class="relative isolate overflow-x-clip">
+  <div class="hero-mesh absolute inset-x-0 top-0 -z-10 h-[420px]" aria-hidden="true"></div>
+  <div class="container-page pt-10 sm:pt-14">
+    <nav aria-label="Breadcrumb" class="eyebrow mb-4"><a href="/" class="hover:text-ink">Calculators</a> / {me.category}</nav>
+    <h1 class="h-display">{heading}</h1>
+    <p class="mt-4 max-w-2xl text-base leading-6 text-body">{intro}</p>
+    <div class="mt-8"><slot /></div>
+
+    <div class="mt-16 grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div class="max-w-2xl space-y-10">
+        <slot name="content" />
+        {faq.length > 0 && (
+          <section aria-labelledby="faq">
+            <h2 id="faq" class="h-section">Frequently asked questions</h2>
+            <div class="mt-6 divide-y divide-hairline border-y border-hairline">
+              {faq.map((f) => (
+                <details class="group py-4">
+                  <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-ink">
+                    {f.q}
+                    <svg class="shrink-0 transition-transform group-open:rotate-180" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                  </summary>
+                  <p class="mt-3 leading-6">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+      <aside aria-label="Related calculators">
+        <p class="eyebrow mb-3">Related</p>
+        <ul class="space-y-3">
+          {related.map((c) => (
+            <li><CalcCard slug={c.slug} /></li>
+          ))}
+        </ul>
+      </aside>
+    </div>
+  </div>
+  </div>
+</Layout>
